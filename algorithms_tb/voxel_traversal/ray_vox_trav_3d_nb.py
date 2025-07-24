@@ -31,7 +31,7 @@ current_dir = Path(__file__).parent.parent.parent.parent  # append utils
 if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
-import geos_utils.numba_tb as ntb  # import numba toolbox
+import geos_utils.numba_tb.numba_tb as ntb  # import numba toolbox
 
 
 
