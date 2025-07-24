@@ -3,7 +3,7 @@
 A collection of various python processing tools for data handling and geospatial processing tasks.
 
 Github repositories depending on GEOS_utils:
-  * [occlusion mapping](link to repo).
+  * [occlusion mapping](https://github.com/MGEOS/CANOPy/tree/main/occlusion_mapping).
 
 
 ## Tools
