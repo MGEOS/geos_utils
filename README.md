@@ -1,4 +1,4 @@
-# GEOS_utils - geospatial utils
+# geos_utils - geospatial utils
 
 A collection of various python processing tools for data handling and geospatial processing tasks.
 
