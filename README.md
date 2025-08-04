@@ -33,5 +33,15 @@ Licensed under the [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0
 
 ## Changelog
 
+### [0.1.1] - 2025-08-04
+
+#### Added
+  * function delete_file(): deleta a file
+  * function find_filenames(): find files in a foller following a regex pattern
+  * function print_array_size_in_gb(): print size of a numpy array
+  * function df_instances_to_dict(): convert instances of a dataframe to a dictionary
+
+
+
 ### [0.1.0] - 2025-07-22
 _First release_
