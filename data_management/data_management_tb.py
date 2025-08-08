@@ -12,6 +12,7 @@ import errno
 import os
 import glob
 import numpy as np
+from pathlib import Path
 
 
 ### file/folder management
@@ -60,11 +61,29 @@ def find_filenames(base_dir, regex_pattern="*.las"):
     """
     return glob.glob(os.path.join(base_dir, regex_pattern))
 
-def print_array_size_in_gb(array: np.ndarray):
+def print_array_size_gb(array: np.ndarray):
     
     size_in_bytes = array.nbytes
-    size_in_gigabytes = size_in_bytes / (1024 * 1024 * 1024)
+    size_in_gigabytes = size_in_bytes / (1024**3)
     print(f"Size of the array: {size_in_gigabytes:.2f} GB")
+
+def get_file_size_gb(file_path):
+    """get file size in GB
+
+    Parameters
+    ----------
+    file_path : str
+        path to file
+
+    Returns
+    -------
+    float
+        file size in GB
+    """
+
+    file_path = Path(file_path)
+    size_bytes = file_path.stat().st_size
+    return size_bytes / (1024**3)
 
 
 ### file type conversion

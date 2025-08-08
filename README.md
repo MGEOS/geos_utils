@@ -38,7 +38,8 @@ Licensed under the [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0
 #### Added
   * function delete_file(): deleta a file
   * function find_filenames(): find files in a foller following a regex pattern
-  * function print_array_size_in_gb(): print size of a numpy array
+  * function print_array_size_gb(): print size of a numpy array
+  * function get_file_size_gb(): return size of file
   * function df_instances_to_dict(): convert instances of a dataframe to a dictionary
 
 
