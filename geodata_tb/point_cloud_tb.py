@@ -17,7 +17,7 @@ import warnings
 
 
 from pathlib import Path
-current_dir = Path(__file__).parent.parent.parent.parent  # append utils
+current_dir = Path(__file__).parent.parent.parent  # append utils
 if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
