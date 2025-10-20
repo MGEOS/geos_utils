@@ -48,7 +48,7 @@ def vox_aoi(boundary, cell_size):
     '''
 
     # make fit to grid
-    decimals_cell_size = ntb.nb_float_to_string(cell_size).find('.')
+    decimals_cell_size = ntb.nb_float_to_string(cell_size)[::-1].find('.')
     if decimals_cell_size == -1:
         decimals_cell_size = 0
         
