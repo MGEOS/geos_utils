@@ -370,7 +370,7 @@ def normalize_vox_array(vox_array, dtm, xyz_bounds, cell_size):
 
 
     ### initialize new array
-    storage_normalized = np.full((vox_array.shape[-3], vox_array.shape[-2], vox_array.shape[-1]), np.nan, dtype=np.byte)  # create empty
+    storage_normalized = np.full((vox_array.shape[-3], vox_array.shape[-2], vox_array.shape[-1]), np.nan, dtype=vox_array.dtype)  # create empty
 
 
     ### iterate through cells
