@@ -57,87 +57,82 @@ def closest_points_between_lines(
     - Uses a threshold for parallel detection for numerical stability
     """
     
-    # Input validation
+    # validate input
     for p in (a0, a1, b0, b1):
         if p.size != 3:
             raise ValueError("All points must be 3D vectors")
             
-    # Configure clamping flags
+    # set clamping flags
     if clampAll:
         clampA0 = True
         clampA1 = True
         clampB0 = True
         clampB1 = True
 
-    # Calculate segment vectors and their magnitudes
+    # calculate segment vectors and their magnitudes
     A = a1 - a0  # Direction vector of first segment
     B = b1 - b0  # Direction vector of second segment
     
     magA = np.linalg.norm(A)
     magB = np.linalg.norm(B)
     
-    # Handle degenerate cases: zero-length segments
-    # A zero-length segment is a point, so we find closest point from point to segment
-    if magA < 1e-10:
-        if magB < 1e-10:
-            # Both segments are points - simple point-to-point distance
+    # handle degenerate cases: zero-length segments
+    if magA < 1e-10: # zero-length segment is a point, so we find closest point from point to segment
+        if magB < 1e-10: # both segments are points - simple point-to-point distance
             return a0, b0, np.linalg.norm(a0 - b0)
         
-        # Avoid redundant calculations by computing closest point once
+        # calculate closest point
         closest_on_b = closest_point_between_point_and_segment(a0, b0, b1, clampB0, clampB1)
         return a0, closest_on_b, np.linalg.norm(a0 - closest_on_b)
     
     if magB < 1e-10:
-        # Same for other segment
         closest_on_a = closest_point_between_point_and_segment(b0, a0, a1, clampA0, clampA1)
         return closest_on_a, b0, np.linalg.norm(closest_on_a - b0)
 
-    # Normalize direction vectors for numerical stability
+    # normalize direction vectors
     _A = A / magA
     _B = B / magB
     
-    # Calculate cross product to check for parallel lines
+    # calculate cross product to check for parallel lines
     cross = np.cross(_A, _B)
     denom = np.linalg.norm(cross)**2
     
-    # Handle parallel lines - threshold to capture near-parallel cases
-    # where floating-point precision might cause issues
+    # handle parallel lines - threshold to capture near-parallel cases where floating-point precision might cause issues
     if denom < 1e-10:
         return closest_distance_parallel_segments(
             a0, a1, b0, b1, _A, magA,
             clampA0, clampA1, clampB0, clampB1
         )
     
-    # Lines are not parallel - find closest points using standard method
+    # lines are not parallel - find closest points between both segments
     
-    # Calculate vector between origins
+    # calculate vector between origins
     t = b0 - a0
     
-    # Use determinants to find parameters for closest points
+    # use determinants to find parameters for closest points
     detA = np.linalg.det(np.vstack((t, _B, cross)))
     detB = np.linalg.det(np.vstack((t, _A, cross)))
     
-    # Calculate parameters along each segment
-    t0 = detA / denom  # parameter for first segment
-    t1 = detB / denom  # parameter for second segment
+    # calculate parameters along each segment
+    t0 = detA / denom
+    t1 = detB / denom
 
-    # Check if clamping is required
+    # check if clamping required
     needs_clamping = ((clampA0 and t0 < 0) or 
                       (clampA1 and t0 > magA) or
                       (clampB0 and t1 < 0) or
                       (clampB1 and t1 > magB))
     
     if needs_clamping:
-        # Apply clamping and handle subsequent adjustments
         pA, pB = clamp_segment_points(
             a0, _A, magA, b0, _B, magB, t0, t1,
             clampA0, clampA1, clampB0, clampB1
         )
     else:
-        pA = a0 + (_A * t0)  # use unscaled parameters with normalized vectors
-        pB = b0 + (_B * t1)  # use unscaled parameters with normalized vectors
+        pA = a0 + (_A * t0)
+        pB = b0 + (_B * t1)
     
-    # Calculate final distance
+    # calculate distance
     distance = np.linalg.norm(pA - pB)
     
     return pA, pB, distance
@@ -177,14 +172,15 @@ def closest_distance_parallel_segments(
     Paramteters _B and magB are not used in this function since all calculations can be 
     performed using only the first lines direction vector (_A) when the lines are parallel.
     """
-    # Project b0 onto line A to determine relative positions
+
+    # project b0 onto line A to determine relative positions
     d0 = np.dot(_A, (b0 - a0))
     
-    # If we have clamping constraints, check for endpoint solutions
+    # if clamping constraints, check for endpoint solutions
     if clampA0 or clampA1 or clampB0 or clampB1:
         d1 = np.dot(_A, (b1 - a0))
         
-        # Case 1: Segment B is before segment A
+        # case 1: segment B is before segment A
         if d0 <= 0 >= d1:
             if clampA0 and clampB1:
                 # Choose the closer pair of endpoints
@@ -192,7 +188,7 @@ def closest_distance_parallel_segments(
                     return a0, b0, np.linalg.norm(a0 - b0)
                 return a0, b1, np.linalg.norm(a0 - b1)
         
-        # Case 2: Segment B is after segment A
+        # case 2: segment B is after segment A
         elif d0 >= magA <= d1:
             if clampA1 and clampB0:
                 # Choose the closer pair of endpoints
@@ -200,11 +196,11 @@ def closest_distance_parallel_segments(
                     return a1, b0, np.linalg.norm(a1 - b0)
                 return a1, b1, np.linalg.norm(a1 - b1)
     
-    # Calculate perpendicular distance between parallel lines
+    # calculate perpendicular distance between parallel lines
     v = b0 - a0
     perpDist = np.linalg.norm(v - np.dot(v, _A) * _A)
     
-    # For parallel lines without a unique solution, return NaN points
+    # for parallel lines without a unique solution, return NaN
     return np.full(3, np.nan), np.full(3, np.nan), perpDist
 
 
@@ -241,48 +237,49 @@ def clamp_segment_points(
     When a point is clamped on one segment, this function recalculates the corresponding 
     point on the other segment to maintain minimum distance between segments.
     """
-    # Initialize points at unclamped positions
+
+    # initialize points at unclamped positions
     pA = a0 + (_A * t0)
     pB = b0 + (_B * t1)
     
-    # Clamp first segment point if needed
+    # clamp first segment point if needed
     if clampA0 and t0 < 0:
-        pA = a0  # Clamp to start point
+        pA = a0  # clamp to start point
     elif clampA1 and t0 > magA:
-        pA = a0 + _A * magA  # Clamp to end point
+        pA = a0 + _A * magA  # clamp to end point
     
-    # Clamp second segment point if needed
+    # clamp second segment point if needed
     if clampB0 and t1 < 0:
-        pB = b0  # Clamp to start point
+        pB = b0  # clamp to start point
     elif clampB1 and t1 > magB:
-        pB = b0 + _B * magB  # Clamp to end point
+        pB = b0 + _B * magB  # clamp to end point
     
-    # If first point was clamped, recalculate second point
+    # if first point was clamped, recalculate second point
     if (clampA0 and t0 < 0) or (clampA1 and t0 > magA):
-        # Project clamped point pA onto segment B
+        # project clamped point pA onto segment B
         dot = np.dot(_B, (pA - b0))
         
-        # Clamp projection if needed
+        # clamp projection if needed
         if clampB0 and dot < 0:
             dot = 0
         elif clampB1 and dot > magB:
             dot = magB
             
-        # Update second point based on projection
+        # update second point based on projection
         pB = b0 + (_B * dot)
     
-    # If second point was clamped, recalculate first point
+    # if second point was clamped, recalculate first point
     if (clampB0 and t1 < 0) or (clampB1 and t1 > magB):
-        # Project clamped point pB onto segment A
+        # project clamped point pB onto segment A
         dot = np.dot(_A, (pB - a0))
         
-        # Clamp projection if needed
+        # clamp projection if needed
         if clampA0 and dot < 0:
             dot = 0
         elif clampA1 and dot > magA:
             dot = magA
             
-        # Update first point based on projection
+        # update first point based on projection
         pA = a0 + (_A * dot)
             
     return pA, pB
@@ -316,31 +313,26 @@ def closest_point_between_point_and_segment(
     
     segment_len = np.linalg.norm(segment_vec)
     
-    # Handle degenerate case
+    # handle degenerate case
     if segment_len < 1e-10:
         return segment_start
     
-    # Normalize segment vector
+    # normalize segment vector
     segment_vec_norm = segment_vec / segment_len
     
-    # Project point onto segment line
+    # project point onto segment line
     projection = np.dot(point_vec, segment_vec_norm)
     
-    # Apply clamping constraints
+    # apply clamping constraints
     if clamp_start and projection < 0:
         projection = 0
     if clamp_end and projection > segment_len:
         projection = segment_len
     
-    # Calculate closest point
+    # calculate closest point
     closest = segment_start + projection * segment_vec_norm
     
     return closest
-
-
-def is_parallel_case(points):
-    """Check if result indicates a parallel case (contains NaN)"""
-    return np.any(np.isnan(points[0]))
 
 
 def visualize_segments_3d(a0, a1, b0, b1, p1, p2, dist, title=None, subplot_position=None):
@@ -357,95 +349,95 @@ def visualize_segments_3d(a0, a1, b0, b1, p1, p2, dist, title=None, subplot_posi
     title : str - Title for the plot
     subplot_position : tuple - Position in a subplot grid (ax parameter)
     """
-    # Create figure if not using subplots - now with larger size for individual plots
+
+    # create figure if not using subplots - now with larger size for individual plots
     if subplot_position is None:
         fig = plt.figure(figsize=(12, 10))
         ax = fig.add_subplot(111, projection='3d')
     else:
         ax = subplot_position
     
-    # Plot first line segment (red)
+    # plot line segments
     ax.plot([a0[0], a1[0]], [a0[1], a1[1]], [a0[2], a1[2]], 'r-', linewidth=3, label='Segment A')
-    
-    # Plot second line segment (blue)
     ax.plot([b0[0], b1[0]], [b0[1], b1[1]], [b0[2], b1[2]], 'b-', linewidth=3, label='Segment B')
     
-    # Mark segment endpoints with labels
+    # mark segment endpoints
     ax.scatter([a0[0]], [a0[1]], [a0[2]], color='darkred', s=100, marker='o')
     ax.scatter([a1[0]], [a1[1]], [a1[2]], color='red', s=100, marker='o')
     ax.scatter([b0[0]], [b0[1]], [b0[2]], color='darkblue', s=100, marker='o')
     ax.scatter([b1[0]], [b1[1]], [b1[2]], color='blue', s=100, marker='o')
     
-    # Add endpoint labels
+    # add endpoint labels
     ax.text(a0[0], a0[1], a0[2], '  a0', fontsize=12, color='darkred')
     ax.text(a1[0], a1[1], a1[2], '  a1', fontsize=12, color='red')
     ax.text(b0[0], b0[1], b0[2], '  b0', fontsize=12, color='darkblue')
     ax.text(b1[0], b1[1], b1[2], '  b1', fontsize=12, color='blue')
     
-    # If not a parallel case, plot closest points and connecting line
-    if not np.any(np.isnan(p1)):
+
+    # if not a parallel case, plot closest points and connecting line
+    if not np.any(np.isnan(np.array([p1, p2]))):
         # Plot closest points
         ax.scatter([p1[0], p2[0]], [p1[1], p2[1]], [p1[2], p2[2]], 
                   color=['lime', 'forestgreen'], s=120, label='Closest Points')
         
-        # Add labels for closest points
+        # add labels for closest points
         ax.text(p1[0], p1[1], p1[2], '  p1', fontsize=12, color='lime')
         ax.text(p2[0], p2[1], p2[2], '  p2', fontsize=12, color='forestgreen')
         
-        # Plot line between closest points
+        # plot line between closest points
         ax.plot([p1[0], p2[0]], [p1[1], p2[1]], [p1[2], p2[2]], 'g--', linewidth=3)
         
-        # Add distance annotation
+        # add distance annotation
         mid_x = (p1[0] + p2[0]) / 2
         mid_y = (p1[1] + p2[1]) / 2
         mid_z = (p1[2] + p2[2]) / 2
         ax.text(mid_x, mid_y, mid_z, f'  d={dist:.4f}', fontsize=14, color='green', 
                 bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
     else:
-        # For parallel case, show distance with better visualization
+        # for parallel case, show distance
         ax.plot([a0[0], b0[0]], [a0[1], b0[1]], [a0[2], b0[2]], 'g--', linewidth=2)
         
-        # Add explanatory text for parallel case
+        # add text
         mid_x = (a0[0] + b0[0]) / 2
         mid_y = (a0[1] + b0[1]) / 2
         mid_z = (a0[2] + b0[2]) / 2
         ax.text(mid_x, mid_y, mid_z, f'Parallel Lines\nDistance = {dist:.4f}', fontsize=14, color='green',
                ha='center', va='center', bbox=dict(facecolor='white', alpha=0.7, edgecolor='green'))
 
-    # Set labels and title with larger font
+    # set labels
     ax.set_xlabel('X-axis', fontsize=14)
     ax.set_ylabel('Y-axis', fontsize=14)
     ax.set_zlabel('Z-axis', fontsize=14)
     
+    # set title
     if title:
         ax.set_title(title, fontsize=16, fontweight='bold')
     
-    # Keep equal aspect ratio for better visualization
-    # Find max range to make axis limits equal
+    # find max range to make axis limits equal
     max_range = np.max([
         np.max([a0[0], a1[0], b0[0], b1[0]]) - np.min([a0[0], a1[0], b0[0], b1[0]]),
         np.max([a0[1], a1[1], b0[1], b1[1]]) - np.min([a0[1], a1[1], b0[1], b1[1]]),
         np.max([a0[2], a1[2], b0[2], b1[2]]) - np.min([a0[2], a1[2], b0[2], b1[2]])
     ])
     
-    # Add a small buffer to ensure points aren't at the edge
+    # add a small buffer to ensure points aren't at the edge
     max_range = max_range * 1.2
     
-    # Get the center point for each axis
+    # get the center point for each axis
     mid_x = (np.max([a0[0], a1[0], b0[0], b1[0]]) + np.min([a0[0], a1[0], b0[0], b1[0]])) / 2
     mid_y = (np.max([a0[1], a1[1], b0[1], b1[1]]) + np.min([a0[1], a1[1], b0[1], b1[1]])) / 2
     mid_z = (np.max([a0[2], a1[2], b0[2], b1[2]]) + np.min([a0[2], a1[2], b0[2], b1[2]])) / 2
     
-    # Set limits to ensure equal scaling
+    # set limits to ensure equal scaling
     ax.set_xlim(mid_x - max_range/2, mid_x + max_range/2)
     ax.set_ylim(mid_y - max_range/2, mid_y + max_range/2)
     ax.set_zlim(mid_z - max_range/2, mid_z + max_range/2)
     
-    # Add grid for better spatial reference
+    # add grid for better spatial reference
     ax.grid(True, linestyle='--', alpha=0.7)
     
-    # Add custom legend with distance information
-    if not np.any(np.isnan(p1)):
+    # addlegend with distance information
+    if not np.any(np.isnan(np.array([p1, p2]))):
         legend_elements = [
             plt.Line2D([0], [0], color='r', lw=3, label='Segment A'),
             plt.Line2D([0], [0], color='b', lw=3, label='Segment B'),
@@ -460,7 +452,7 @@ def visualize_segments_3d(a0, a1, b0, b1, p1, p2, dist, title=None, subplot_posi
         
     ax.legend(handles=legend_elements, loc='upper right', fontsize=12)
     
-    # Only show the result if not in subplot
+    # only show the result if not in subplot
     if subplot_position is None:
         plt.tight_layout()
         plt.show()
@@ -516,7 +508,7 @@ def example_usage():
     print("Point on first segment:", p1_p)
     print("Point on second segment:", p2_p)
     print("Distance:", dist_p)
-    print("Is parallel case:", is_parallel_case((p1_p, p2_p)))
+    print("Is parallel case:", np.any(np.isnan(np.array([p1_p, p2_p])))
     
     # Parallel segments example visualization (individual plot)
     visualize_segments_3d(a0_p, a1_p, b0_p, b1_p, p1_p, p2_p, dist_p, 
