@@ -226,7 +226,7 @@ def point_clouds_xyz_range(las_paths):
 
     return x_min, x_max, y_min, y_max, z_min, z_max
 
-def voxelize_pointcloud(las_file_in, xyz_bounds, cell_size, nb_cell):
+def voxelize_pointcloud(las_file_in, xyz_bounds, cell_size, nb_cell, scaling=True):
     """Voxelize a point cloud.
 
     This function reads a .las file containing a point cloud and converts them
@@ -234,8 +234,9 @@ def voxelize_pointcloud(las_file_in, xyz_bounds, cell_size, nb_cell):
 
     Parameters
     ----------
-    las_file_in : str
-        Path to the input LAS file containing the point cloud data.
+    las_file_in : str or numpy.ndarray
+        Path to the input LAS file containing the point cloud data or numpy array containing
+        point coordinates  [x, y, z] with shape (n,3).
     xyz_bounds : numpy.ndarray
         Array of shape (2, 3) specifying the minimum and maximum bounds [[min_x, min_y, min_z],
         [max_x, max_y, max_z]] of the voxel grid.
@@ -258,31 +259,40 @@ def voxelize_pointcloud(las_file_in, xyz_bounds, cell_size, nb_cell):
     excluded from the resulting voxel grid.
     """
 
+    print("Voxelize point cloud.")
+
+    if isinstance(las_file_in, str):
+        point_cloud_array, meta = read_las(las_file_in, dimensions=["x", "y", "z"])  # read las
+
+    elif isinstance(las_file_in, np.ndarray):
+        assert las_file_in.shape[1] == 3  # assert arrays has 3 cols (x,y,z)
+        point_cloud_array = las_file_in
+
+    else:
+        print(f"Can't read point cloud data: {las_file_in} for voxelization.")
 
 
-    ### read las
-    point_cloud_array, meta = read_las(las_file_in, dimensions=["x", "y", "z"])
+    ### [ OPTIONAL ] calculate scaling factor to reduce floating point precision error (e.g. for cell_size = 0.1)
+    if scaling:
+        
+        decimals_cell_size = ntb.nb_float_to_string(cell_size)[::-1].find('.')  # number of float decimals
 
+        if decimals_cell_size == -1:
+            decimals_cell_size = 0
 
-    ### [ OPTIONAL ] calculate factor to reduce floating point precision error (e.g. for cell_size = 0.1)
-    decimals_cell_size = ntb.nb_float_to_string(cell_size)[::-1].find('.')  # number of float decimals
+        # scaling factor
+        scaling_factor = 10**decimals_cell_size
 
-    if decimals_cell_size == -1:
-        decimals_cell_size = 0
+        # scale bounds
+        cell_size = np.round(cell_size * scaling_factor)
+        xyz_bounds = np.round(xyz_bounds * scaling_factor)
 
-    # factor
-    factor = 10**decimals_cell_size
-
-    # scale bounds
-    cell_size_f = np.round(cell_size * factor)
-    xyz_bounds_f = np.round(xyz_bounds * factor)
-
-    # scale coordinates
-    point_cloud_array *= factor  # replace
+        # scale coordinates
+        point_cloud_array *= scaling_factor # replace
 
 
     ### point cell index
-    cidx = np.floor((point_cloud_array - xyz_bounds_f[0]) / cell_size_f).astype(np.int_)  # normalize
+    cidx = np.floor((point_cloud_array - xyz_bounds[0]) / cell_size).astype(np.int_)  # normalize
     point_cloud_array = None  # close
 
 
