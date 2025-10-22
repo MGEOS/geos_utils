@@ -508,7 +508,7 @@ def example_usage():
     print("Point on first segment:", p1_p)
     print("Point on second segment:", p2_p)
     print("Distance:", dist_p)
-    print("Is parallel case:", np.any(np.isnan(np.array([p1_p, p2_p])))
+    print("Is parallel case:", np.any(np.isnan(np.array([p1_p, p2_p]))))
     
     # Parallel segments example visualization (individual plot)
     visualize_segments_3d(a0_p, a1_p, b0_p, b1_p, p1_p, p2_p, dist_p, 
