@@ -2,9 +2,13 @@
 
 A collection of various python processing tools for data handling and geospatial processing tasks.
 
-Github repositories depending on GEOS_utils:
+<br>
+
+
+## Github repositories depending on GEOS_utils:
   * [CANOPy](https://github.com/MGEOS/CANOPy)
 
+<br>
 
 
 ## Tools
@@ -17,6 +21,7 @@ Github repositories depending on GEOS_utils:
   * [numba helper functions](./numba_tb)
   * [plotting helper functions](./plotting_tb)
 
+<br>
 
 
 ## Installation
@@ -28,6 +33,7 @@ conda activate geos_utils
 conda install numpy numba laszip laspy lazrs-python fiona shapely rasterio pyproj pandas geopandas
 ```
 
+<br>
 
 
 ## Citation
@@ -45,14 +51,18 @@ If you find this useful for your research, please consider citing our paper:
 }
 ```
 
+<br>
 
 
 ## License
 Licensed under the [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
 
+<br>
 
 
 ## Changelog
+
+<br>
 
 
 ### [0.1.2] - 2025-10-22
@@ -65,6 +75,7 @@ Licensed under the [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0
   * function normalize_vox_array(): output data type same as input array
   * function vox_aoi(): correct calculation of cell_size decimal places
 
+<br>
 
 
 ### [0.1.1] - 2025-08-04
@@ -76,6 +87,7 @@ Licensed under the [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0
   * function get_file_size_gb(): return size of file
   * function df_instances_to_dict(): convert instances of a dataframe to a dictionary
 
+<br>
 
 
 ### [0.1.0] - 2025-07-22
