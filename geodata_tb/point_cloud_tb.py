@@ -29,28 +29,25 @@ import geos_utils.numba_tb.numba_tb as ntb
 def read_las(file_path, dimensions=None, no_points=None):
     """
     Read .las point cloud and return as numpy array.
-    
-    This function reads a .las file containing point cloud data and extracts specified
-    dimensions into a numpy array. It can read all points or a specified number of points
-    for testing purposes. For further information check out this tutorial: https://laspy.readthedocs.io/en/latest/complete_tutorial.html
+    For further information check out: https://laspy.readthedocs.io/en/latest/complete_tutorial.html
 
     Parameters
     ----------
     file_path : str
-        Path to the .las file to be read.
+        Path to the .las file.
     dimensions : list, optional
-        List of dimension names to read from the .las file (e.g., ['x', 'y', 'z', 'intensity']).
-        Must be provided, as the function will exit with an error if dimensions is None.
+        List of dimension names to read from the .las file (e.g., ['gps_time', 'x', 'y', 'z', 'return_number']).
+        If None, read all dimensions.
     no_points : int, optional
-        Number of points to read. If None, reads all points in the file.
+        Number of points to read. If None, reads all points.
         
     Returns
     -------
     pc_array : numpy.ndarray
         Array of shape (n, m) where n is the number of points read and m is the number
-        of dimensions requested. Contains the point cloud data.
+        of dimensions.
     meta : dict
-        Dictionary containing metadata about the point cloud, including:
+        Dictionary containing metadata:
         - Points Read: Number of points actually read
         - Total point_count: Total number of points in the file
         - gps_encoding_value: GPS encoding value from header
@@ -60,13 +57,12 @@ def read_las(file_path, dimensions=None, no_points=None):
         
     Raises
     ------
-    SystemExit
-        If dimensions parameter is None, the function will print a warning and exit.
+    Warning
+        If dimensions parameter is None, the function will print a warning and read all dimensions.
         
     Notes
     -----
-    For scaled values (coordinates), use lowercase 'x', 'y', 'z' which will apply
-    the appropriate scale and offset from the .las header.
+    Use lowercase 'x', 'y', 'z' for scaled coordinates (= dimension * scale + offset).
     """
 
     with laspy.open(file_path) as f:
@@ -80,14 +76,15 @@ def read_las(file_path, dimensions=None, no_points=None):
             pc = f.read_points(int(no_points))  # read points for testing
 
         if dimensions == None:
-            warnings.warn("\n    please provide dimension names to read\n" \
-            "use lowercase 'x', 'y', 'z' for scaled values (= dimension*scale + offset)" \
-            f"possible dimensions: {list(pc.point_format.dimension_names)}")
-            sys.exit(-1)
-        else:
-            print(f"    read dimensions: {dimensions}")
-            pc_array = np.vstack([pc[att] for att in dimensions]).T
+            dimensions = list(pc.point_format.dimension_names)
+            warnings.warn("\n    no dimensions provided" \
+                "\n    use lowercase 'x', 'y', 'z' for scaled values (= dimension * scale + offset)" \
+                "\n    reading all dimensions")
 
+
+        # read dimensions
+        print(f"\n    read dimensions: {dimensions}")
+        pc_array = np.vstack([pc[att] for att in dimensions]).T
         points_read = pc_array.shape[0]
 
 
