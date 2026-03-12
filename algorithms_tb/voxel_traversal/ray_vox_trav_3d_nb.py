@@ -106,27 +106,30 @@ def box_intersect3D(bounds, origin, direction):
 @jit(nopython=True) #, parallel=True, fastmath=True, cache=True)
 def ray_box_intersect(origin, end, boundary):
     
-    if not point_within_boundary(origin, boundary) or not point_within_boundary(end, boundary):
-        
+    origin_inside = point_within_boundary(origin, boundary)
+    end_inside = point_within_boundary(end, boundary)
+
+    if origin_inside and end_inside:
+         # both points are within, no intersection needed
+        return origin, end
+    
+    else:
         direction = end-origin
         t = box_intersect3D(bounds=boundary, origin=origin, direction=direction)
-    
-        if t is not None:  # some intersection is found
-            if t[0] >= 0:  # start outside boundary
-                intersection_point = origin + direction * t[0]  # new start
-                #print("intersection point", intersection_point)
-                return intersection_point, end
-            else:  # start inside boundary, end outside boundary 
-                intersection_point = end + direction * t[1]  # new end
-                #print("intersection point", intersection_point)
-                return origin, intersection_point
-        else:
+
+        if t is None:
             #print("No intersection")
             return None, None
+        else:
+            entry_point = origin + t[0] * direction
+            exit_point = origin + t[1] * direction
     
-    else: # both points are within, no intersection needed
-        return origin, end
-
+            if origin_inside:
+                entry_point = origin  # keep origin
+            if end_inside:
+                exit_point = end  # keep end 
+            
+            return entry_point, exit_point
 
 ### vox traversal
 @jit(nopython=True) #, cache=True)
