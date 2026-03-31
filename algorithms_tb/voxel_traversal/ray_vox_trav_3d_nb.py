@@ -36,11 +36,11 @@ import geos_utils.numba_tb.numba_tb as ntb  # import numba toolbox
 
 
 ### boundary voxelization
-@jit(nopython=True) #, parallel=True, fastmath=True, cache=True)
+@jit(nopython=True) #, parallel=True, cache=True)
 def point_within_boundary(point, boundary):
     return np.all(boundary[0] < point) and np.all(point < boundary[1])
 
-@jit(nopython=True) #, parallel=True, fastmath=True, cache=True)
+@jit(nopython=True) #, parallel=True, cache=True)
 def vox_aoi(boundary, cell_size):
     '''
     boundary to define points 
@@ -66,7 +66,7 @@ def vox_aoi(boundary, cell_size):
 
 
 ### ray box intersection
-@jit(nopython=True, fastmath=True) #, parallel=True, cache=True)
+@jit(nopython=True) #, parallel=True, cache=True)
 def box_intersect3D(bounds, origin, direction):
     
     t0, t1 = 0, 1
@@ -103,7 +103,7 @@ def box_intersect3D(bounds, origin, direction):
     else:
         return None
 
-@jit(nopython=True) #, parallel=True, fastmath=True, cache=True)
+@jit(nopython=True) #, parallel=True, cache=True)
 def ray_box_intersect(origin, end, boundary):
     
     origin_inside = point_within_boundary(origin, boundary)
@@ -140,7 +140,7 @@ def frac0(point, cell_size):
 def frac1(point, cell_size):
     return 1 - (point / cell_size) + np.floor(point / cell_size)
 
-@jit(nopython=True)  #, parallel=True, fastmath=True, cache=True)
+@jit(nopython=True)  #, parallel=True, cache=True)
 def initialize_step(ray_vector):
     # StepX will be 0, 1, -1 depending on the ray's x direction.
     Step = ray_vector.copy()  # copy
@@ -161,7 +161,7 @@ def vox_trav_initialization(origin, direction, cell_size):
     #print("tDelta, tMax", tDelta, tMax)
     return tDelta, tMax
 
-@jit(nopython=False, parallel=True, fastmath=True, cache=True)  #, fastmath=True, cache=True)  # parallel={"setitem":False}
+@jit(nopython=False, parallel=True, cache=True)  #, cache=True)  # parallel={"setitem":False}
 def ray_vox_trav_nb(rays, boundary, cell_size): #, geospace=False):
 
 

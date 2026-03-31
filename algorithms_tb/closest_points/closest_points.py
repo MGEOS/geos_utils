@@ -22,7 +22,7 @@ from typing import Tuple
 import matplotlib.pyplot as plt
 
 
-@jit(nopython=True, fastmath=True, cache=True, error_model='numpy')
+@jit(nopython=True, cache=True, error_model='numpy')
 def closest_points_between_lines(
     a0: np.ndarray,
     a1: np.ndarray,
@@ -138,7 +138,7 @@ def closest_points_between_lines(
     return pA, pB, distance
 
 
-@jit(nopython=True, fastmath=True, cache=True, error_model='numpy')
+@jit(nopython=True, cache=True, error_model='numpy')
 def closest_distance_parallel_segments(
     a0, a1, b0, b1, _A, magA,
     clampA0, clampA1, clampB0, clampB1
@@ -204,7 +204,7 @@ def closest_distance_parallel_segments(
     return np.full(3, np.nan), np.full(3, np.nan), perpDist
 
 
-@jit(nopython=True, fastmath=True, cache=True, error_model='numpy')
+@jit(nopython=True, cache=True, error_model='numpy')
 def clamp_segment_points(
     a0, _A, magA, b0, _B, magB, t0, t1,
     clampA0, clampA1, clampB0, clampB1
@@ -285,7 +285,7 @@ def clamp_segment_points(
     return pA, pB
 
 
-@jit(nopython=True, fastmath=True, cache=True, error_model='numpy')
+@jit(nopython=True, cache=True, error_model='numpy')
 def closest_point_between_point_and_segment(
     point, 
     segment_start, 
