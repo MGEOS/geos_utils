@@ -84,7 +84,7 @@ def read_las(file_path, dimensions=None, no_points=None):
 
         # read dimensions
         print(f"    read dimensions: {dimensions}")
-        pc_array = np.vstack([pc[att] for att in dimensions]).T
+        pc_array = np.column_stack([pc[att] for att in dimensions])
         points_read = pc_array.shape[0]
 
 
