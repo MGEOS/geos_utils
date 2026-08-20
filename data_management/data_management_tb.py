@@ -108,12 +108,53 @@ def df_instances_to_dict(df):
     return [{k: v for k, v in m.items() if v == v and v is not None} for m in df.to_dict(orient='records')]
 
 
+### numpy
+def get_suitable_np_datatype(value, dtype="uint"):
+    '''
+    implemented with value < np.iinfo(dt).max to be aible to set nan = np.iinfo(dt).max
+    '''
+
+    if dtype == "uint":
+        dtype_list = [np.uint8, np.uint16, np.uint32, np.uint64]
+    elif dtype == "int":
+        dtype_list = [np.int8, np.int16, np.int32, np.int64]
+    elif dtype == "float":
+        dtype_list = [np.float16, np.float32, np.float64]
+
+    if dtype == "uint" or dtype == "int":
+        for dt in dtype_list:
+            if np.iinfo(dt).min <= value < np.iinfo(dt).max:
+                return dt
+        print(f"Cannot represent {value} with {np.iinfo(dt)}")
+
+    elif dtype == "float":
+        for dt in dtype_list:
+            if np.finfo(dt).min <= value < np.finfo(dt).max:
+                return dt
+        print(f"Cannot represent {value} with {np.finfo(dt)}")
+
+    return None
+
+
 ### memory mapping
 def read_memmap_array(array_mapped_path, array_shape, array_dtype):
     '''
     store array, return mapped array. original array can be closed afterwards.
     '''
 
+    array_mapped = np.memmap(array_mapped_path,
+                        shape=array_shape,
+                        mode = 'r',
+                        dtype = array_dtype)
+    return array_mapped
+
+def write_memmap_array(array, array_mapped_path):
+    '''
+    store array, return mapped array. original array can be closed afterwards.
+    '''
+    array_shape = array.shape
+    array_dtype = array.dtype
+    array.tofile(array_mapped_path)  # should be .rbf
     array_mapped = np.memmap(array_mapped_path,
                         shape=array_shape,
                         mode = 'r',
