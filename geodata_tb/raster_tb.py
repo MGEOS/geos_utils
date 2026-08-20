@@ -8,9 +8,13 @@ date: 05.06.2025
 """
 
 
+import sys
 import fiona
+import numpy as np
 import rasterio
 from rasterio.mask import mask
+import geopandas as gpd
+from shapely.geometry import box
 
 
 #%% I/O
@@ -31,6 +35,22 @@ def read_raster_array(path_in, mask=False, band=1):
                 "nodata": src.nodata}
 
     return array, meta
+
+def read_raster_array_shp_mask(raster_in, mask_shp):
+    '''
+    read raster, mask with shape file, return array
+    '''
+
+    with fiona.open(mask_shp, "r") as shapefile:
+        shapes = [feature["geometry"] for feature in shapefile]
+
+    with rasterio.open(raster_in) as src:
+        out_image, out_transform = mask(src, shapes, crop=True)
+        out_meta = src.meta
+
+    out_image = np.ma.masked_invalid(out_image)
+
+    return out_image, out_transform, out_meta
 
 def write_raster_array(path_out, array, crs, transform, b_descr=None):
 
@@ -72,7 +92,7 @@ def write_raster_array(path_out, array, crs, transform, b_descr=None):
 
 #%% operations
 
-def crop_raster(raster_in, raster_out, crop_shp, crop=True):
+def crop_raster(raster_in, raster_out, crop_shp, crop=True, boundary_test="within"):
     # https://rasterio.readthedocs.io/en/stable/topics/masking-by-shapefile.html
     # crop = False : Applying the features in the shapefile as a mask on the raster sets all pixels outside of the features to be zero. 
     # Features are assumed to be in the same coordinate reference system as the input raster.
@@ -80,9 +100,29 @@ def crop_raster(raster_in, raster_out, crop_shp, crop=True):
     with fiona.open(crop_shp, "r") as shapefile:
         shapes = [feature["geometry"] for feature in shapefile]
 
+
     with rasterio.open(raster_in) as src:
-        out_image, out_transform = mask(src, shapes, crop=crop)
-        out_meta = src.meta
+
+        if boundary_test == "within":  # only full pixel within shapefile
+            # https://stackoverflow.com/questions/42840885/rasterio-mask-raster-against-shape-with-all-pixels-completely-inside-shape
+            crop_df = gpd.read_file(crop_shp)
+            src_extent = box(*src.bounds)
+            shapes = gpd.GeoSeries(src_extent, crs=src.crs).difference(crop_df.dissolve())
+            inverted_polygon = gpd.GeoSeries(src_extent, crs=src.crs).difference(crop_df.dissolve())
+            out_image, out_transform = mask(src, shapes=inverted_polygon, all_touched=True, invert=True)
+            out_meta = src.meta
+
+        elif boundary_test == "pixel_center":  # pixel center within shapefile
+            out_image, out_transform = mask(src, shapes, crop=crop)
+            out_meta = src.meta
+        
+        elif boundary_test == "touched":  # all pixels touching shapefile
+            out_image, out_transform = mask(src, shapes, crop=crop, all_touched=True)
+            out_meta = src.meta
+        else:
+            print("No valid boundary test. Choose: 'within'|'pixel_center'|'touched' ")
+            sys.exit()
+        
 
 
     out_meta.update({"driver": "GTiff",
@@ -99,4 +139,3 @@ def crop_raster(raster_in, raster_out, crop_shp, crop=True):
 def transform_affine_from_origin(x_min, y_max, x_width, y_height):
 
     return rasterio.transform.from_origin(x_min, y_max, x_width, y_height)
-
