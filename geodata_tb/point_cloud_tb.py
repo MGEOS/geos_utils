@@ -10,13 +10,14 @@ date: 05.06.2025
 
 ### import modules
 import sys
+from numba import jit, prange
 import numpy as np
 import geopandas as gpd
 import laspy
 import warnings
-
-
 from pathlib import Path
+
+
 current_dir = Path(__file__).parent.parent.parent  # append utils
 if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
@@ -399,4 +400,39 @@ def normalize_vox_array(vox_array, dtm, xyz_bounds, cell_size):
 
 
     return storage_normalized, xyz_bounds_norm
+
+
+#%% point cloud cleaning
+@jit(nopython=True, parallel=True)
+def check_strictly_increasing(return_vector_length, first_idx, last_idx):
+
+    distance_mask = np.ones(first_idx.shape[0], dtype = np.bool_)
+
+    for idx in prange(first_idx.shape[0]):
+        f_idx = first_idx[idx]
+        l_idx = last_idx[idx] + 1  # for from indexing to add +1
+        returns_vl = return_vector_length[f_idx : l_idx]
+        if np.any(np.isnan(returns_vl)):
+            distance_mask[idx] = False
+        else:
+            distance_mask[idx] = np.all(np.diff(returns_vl) > 0)  # if empty, returns nan > 0 = true (works for single returns)
+
+    return distance_mask
+
+@jit(nopython=True, parallel=True)
+def mask_rays_from_returns(return_mask, first_idx, last_idx):
+    '''mask whole ray when one return masked'''
+
+    ray_return_mask = np.ones(return_mask.shape[0], dtype = np.bool_)
+    ray_mask = np.ones(first_idx.shape[0], dtype = np.bool_)
+
+    for idx in prange(first_idx.shape[0]):
+        f_idx = first_idx[idx]
+        l_idx = last_idx[idx] + 1  # for from indexing to add .1
+        check_returns = np.all(return_mask[f_idx : l_idx])
+        ray_return_mask[f_idx : l_idx] = check_returns  # if empty, returns nan > 0 = true (works for single returns)
+        ray_mask[idx] = check_returns
+
+    return ray_return_mask, ray_mask
+
 
