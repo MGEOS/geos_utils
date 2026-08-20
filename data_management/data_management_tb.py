@@ -106,3 +106,16 @@ def df_instances_to_dict(df):
         with NaN values excluded.
     """
     return [{k: v for k, v in m.items() if v == v and v is not None} for m in df.to_dict(orient='records')]
+
+
+### memory mapping
+def read_memmap_array(array_mapped_path, array_shape, array_dtype):
+    '''
+    store array, return mapped array. original array can be closed afterwards.
+    '''
+
+    array_mapped = np.memmap(array_mapped_path,
+                        shape=array_shape,
+                        mode = 'r',
+                        dtype = array_dtype)
+    return array_mapped
