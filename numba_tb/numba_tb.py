@@ -19,6 +19,7 @@ References:
 """
 
 
+import math
 import numpy as np
 from numba.core import types
 from numba import jit, objmode, prange
@@ -30,21 +31,17 @@ from numba import jit, objmode, prange
 def nb_min(x):
     return np.min(x)
 
-
 @jit(nopython=True, cache=True)
 def nb_max(x):
     return np.max(x)
-
 
 @jit(nopython=True, cache=True)
 def nb_mean(x):
     return np.mean(x)
 
-
 @jit(nopython=True, cache=True)
 def nb_count(x):
     return float(x.shape[0])
-
 
 @jit(nopython=True, cache=True)
 def nb_std(x):
@@ -84,7 +81,6 @@ def nb_any_axis1(x):
         out = np.logical_or(out, x[:, i])
     return out
 
-
 @jit(nopython=True, cache=True)
 def nb_any_axis0(x):
     """
@@ -114,7 +110,6 @@ def nb_any_axis0(x):
     for i in range(x.shape[0]):
         out = np.logical_or(out, x[i, :])
     return out
-
 
 @jit(nopython=True, cache=True)
 def np_all_axis1(x):
@@ -146,7 +141,6 @@ def np_all_axis1(x):
     for i in range(x.shape[1]):
         out = np.logical_and(out, x[:, i])
     return out
-
 
 @jit(nopython=True, cache=True)
 def np_all_axis0(x):
@@ -226,7 +220,6 @@ def _apply_along_axis_0(func1d, arr, out):
         for i, out_slice in enumerate(out):
             _apply_along_axis_0(func1d, arr[:, i], out_slice)
 
-
 @jit(nopython=True)
 def apply_along_axis_0(func1d, arr):
     """
@@ -283,21 +276,17 @@ def apply_along_axis_0(func1d, arr):
 def nb_mean_axis_0(arr):
     return apply_along_axis_0(np.mean, arr)
 
-
 @jit(nopython=True)
 def nb_median_axis_0(arr):
     return apply_along_axis_0(np.median, arr)
-
 
 @jit(nopython=True)
 def nb_amin_axis_0(arr):
     return apply_along_axis_0(np.amin, arr)
 
-
 @jit(nopython=True)
 def nb_amax_axis_0(arr):
     return apply_along_axis_0(np.amax, arr)
-
 
 @jit(nopython=True)
 def nb_std_axis_0(arr):
@@ -400,7 +389,6 @@ def nb_unique_axis0(array, return_index=False, return_inverse=False, return_coun
     # return ret, retidx, retinv, retc
     return retu, retidx, retinv, retc
 
-
 @jit(nopython=True)
 def nb_float_to_string(float_to_string):
     """
@@ -427,3 +415,20 @@ def nb_float_to_string(float_to_string):
     with objmode(string=types.unicode_type):  # declare that the "escaping" string variable is of unicode type.
         string = f'{float_to_string}'
     return string
+
+
+
+#%% spatial functions
+
+@jit(nopython=True, cache=True)
+def ellipse_area_nb(radius1, radius2):
+    '''
+    radius 1 (meters)
+    radius 2 (meters): optional, if beam not equally shaped
+    return: area (m²)
+    '''
+    return math.pi * radius1 * radius2
+
+@jit(nopython=True, fastmath=True, cache=True)  # fastmath safe
+def vector_length_nb(point_A, point_B):  # only axis 0
+    return np.linalg.norm(point_A - point_B)
