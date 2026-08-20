@@ -62,6 +62,25 @@ Licensed under the [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0
 
 ## Changelog
 
+
+<br>
+
+
+### [0.1.3] - 2026-08-20
+
+#### Added
+  * function read_memmap_array(): read memory-mapped array storage
+
+#### Changed
+  * function read_las(): read all dimensions when None provided
+  * removed usage of fastmath=True. With fastmath=True, LLVM is allowed to assume no NaN/Inf values and may optimize away np.isnan() checks
+  * update read_las function to use np.column_stack to reduce memory usage
+  * function crop_raster(): enhance with boundary test options and add read_raster_array_shp_mask function
+
+#### Fixed
+  * function ray_box_intersect(): handle cases correctly where both points outside box
+  * removed fastmath=True. With fastmath=True, LLVM is allowed to assume no NaN/Inf values and may optimize away np.isnan() checks.
+
 <br>
 
 
